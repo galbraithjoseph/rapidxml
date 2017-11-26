@@ -1,4 +1,4 @@
-#include "rapidxml.hpp"
+#include "../rapidxml.hpp"
 #include <string>
 #include <cassert>
 #include <iostream>
@@ -121,19 +121,19 @@ int main(int argc, char * argv[]) {
         auto node = doc.first_node();
         //doc.fixup<0>(node, true);
         //std::cout << "<" << node->prefix() << ":" << node->name() << "/> " << node->xmlns() << std::endl;
-        assert("single" == std::string(node->name(), node->name_size()));
-        assert("urn:xmpp:example" == std::string(node->xmlns(), node->xmlns_size()));
+        assert("single" == node->name());
+        assert("urn:xmpp:example" == node->xmlns());
         auto child = node->first_node(0, "urn:potato");
         assert(child);
-        assert("child" == std::string(child->name(), child->name_size()));
-        assert("urn:potato" == std::string(child->xmlns(), child->xmlns_size()));
+        assert("child" == child->name());
+        assert("urn:potato" == child->xmlns());
         child = node->first_node();
-        assert("firstchild" == std::string(child->name(), child->name_size()));
-        assert("urn:xmpp:example" == std::string(child->xmlns(), child->xmlns_size()));
+        assert("firstchild" == child->name());
+        assert("urn:xmpp:example" == child->xmlns());
         //std::cout << "<" << node->prefix() << ":" << node->name() << "/> " << node->xmlns() << std::endl;
         child = node->first_node("child");
-        assert("child" == std::string(child->name(), child->name_size()));
-        assert("urn:xmpp:example" == std::string(child->xmlns(), child->xmlns_size()));
+        assert("child" == child->name());
+        assert("urn:xmpp:example" == child->xmlns());
         //std::cout << "<" << node->prefix() << ":" << node->name() << "/> " << node->xmlns() << std::endl;
         doc.validate();
     } catch(parse_error & e) {
@@ -149,19 +149,19 @@ int main(int argc, char * argv[]) {
         auto node = doc.first_node();
         doc.fixup<0>(node, true);
         //std::cout << "<" << node->prefix() << ":" << node->name() << "/> " << node->xmlns() << std::endl;
-        assert("single" == std::string(node->name(), node->name_size()));
-        assert("urn:xmpp:example" == std::string(node->xmlns(), node->xmlns_size()));
+        assert("single" == node->name());
+        assert("urn:xmpp:example" == node->xmlns());
         auto child = node->first_node(0, "urn:potato");
         assert(child);
-        assert("child" == std::string(child->name(), child->name_size()));
-        assert("urn:potato" == std::string(child->xmlns(), child->xmlns_size()));
+        assert("child" == child->name());
+        assert("urn:potato" == child->xmlns());
         child = node->first_node();
-        assert("firstchild" == std::string(child->name(), child->name_size()));
-        assert("urn:xmpp:example" == std::string(child->xmlns(), child->xmlns_size()));
+        assert("firstchild" == child->name());
+        assert("urn:xmpp:example" == child->xmlns());
         //std::cout << "<" << node->prefix() << ":" << node->name() << "/> " << node->xmlns() << std::endl;
         child = node->first_node("child");
-        assert("child" == std::string(child->name(), child->name_size()));
-        assert("urn:xmpp:example" == std::string(child->xmlns(), child->xmlns_size()));
+        assert("child" == child->name());
+        assert("urn:xmpp:example" == child->xmlns());
         //std::cout << "<" << node->prefix() << ":" << node->name() << "/> " << node->xmlns() << std::endl;
         doc.validate();
     } catch(parse_error & e) {
@@ -169,6 +169,39 @@ int main(int argc, char * argv[]) {
     } catch(validation_error & e) {
         std::cout << "Validation error: " << e.what() << std::endl;
     }
+
+    // test move.
+    try {
+        char doc_text[] = "<pfx:single xmlns:pfx='urn:xmpp:example'><pfx:firstchild/><child xmlns='urn:potato'/><pfx:child/></pfx:single>";
+        xml_document<> dest;
+        dest.parse<0>(doc_text);
+        doc = std::move(dest);
+        doc.move_append(std::move(dest));
+
+        auto node = doc.first_node();
+        doc.fixup<0>(node, true);
+        //std::cout << "<" << node->prefix() << ":" << node->name() << "/> " << node->xmlns() << std::endl;
+        assert("single" == node->name());
+        assert("urn:xmpp:example" == node->xmlns());
+        auto child = node->first_node(0, "urn:potato");
+        assert(child);
+        assert("child" == child->name());
+        assert("urn:potato" == child->xmlns());
+        child = node->first_node();
+        assert("firstchild" == child->name());
+        assert("urn:xmpp:example" == child->xmlns());
+        //std::cout << "<" << node->prefix() << ":" << node->name() << "/> " << node->xmlns() << std::endl;
+        child = node->first_node("child");
+        assert("child" == child->name());
+        assert("urn:xmpp:example" == child->xmlns());
+        //std::cout << "<" << node->prefix() << ":" << node->name() << "/> " << node->xmlns() << std::endl;
+        doc.validate();
+    } catch(parse_error & e) {
+        std::cout << "Parse error: " << e.what() << std::endl << "At: " << e.where<char>() << std::endl;
+    } catch(validation_error & e) {
+        std::cout << "Validation error: " << e.what() << std::endl;
+    }
+
     try {
         char doc_text[] = "<pfx:single xmlns:pfx='urn:xmpp:example'>";
         doc.parse<parse_open_only>(doc_text);
@@ -210,7 +243,7 @@ int main(int argc, char * argv[]) {
 
         auto node = doc.first_node();
         std::cout << "<" << node->prefix() << ":" << node->name() << "/> " << node->xmlns() << std::endl;
-        assert(std::string("single") == std::string(node->name(), node->name_size()));
+        assert(std::string("single") == node->name());
 	std::cout << text << std::endl;
         doc.validate();
         while (*text) {
